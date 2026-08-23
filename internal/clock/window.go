@@ -20,7 +20,11 @@ func NewInertWindow(clk Clock, duration time.Duration) *InertWindow {
 }
 
 func (w *InertWindow) Ready(startedAt time.Time) bool {
-	return time.Since(startedAt) >= w.duration
+	elapsed := w.clk.Now().Sub(startedAt)
+	if elapsed < 0 {
+		return false
+	}
+	return elapsed >= w.duration
 }
 
 func (w *InertWindow) Require(startedAt time.Time) error {
