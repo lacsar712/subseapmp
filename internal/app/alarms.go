@@ -18,7 +18,7 @@ func (a *App) ReportLinePressureFault(ctx context.Context, bar float64) error {
 func (a *App) HandleManifoldLeak(ctx context.Context, delta float64) error {
 	if err := a.leakGuard.Permit(delta); err != nil {
 		_ = a.alarms.Raise(ctx, "MANIFOLD_LEAK", model.StationID(a.cfg.StationID), 2)
-		return fmt.Errorf("manifold: leak interlock active")
+		return fmt.Errorf("manifold: leak interlock active: %w", err)
 	}
 	return nil
 }
