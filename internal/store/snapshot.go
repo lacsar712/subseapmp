@@ -50,7 +50,8 @@ func (p PressureSnapshot) Clone() PressureSnapshot {
 	if len(p.BoostSlots) == 0 {
 		return out
 	}
-	out.BoostSlots = p.BoostSlots
+	out.BoostSlots = make([]model.BoostScheduleEntry, len(p.BoostSlots))
+	copy(out.BoostSlots, p.BoostSlots)
 	return out
 }
 
