@@ -34,9 +34,9 @@ func (f *PumpFSM) State() PumpState { return f.state }
 func (f *PumpFSM) Apply(ctx context.Context, event string) error {
 	next, ok := allowedPump(f.state, event)
 	if !ok {
-		if f.hooks != nil {
-			_ = f.hooks.RunAfter(ctx, f.state, f.state, event)
-		}
+		// Illegal transition: state is unchanged, so no after-hooks (which would
+		// fire side effects such as the boost pulse) may run. Matches BoosterFSM
+		// and StationFSM, which short-circuit on a denied transition.
 		return fmt.Errorf("%s from %s: %w", event, f.state, model.ErrConflict)
 	}
 	from := f.state
