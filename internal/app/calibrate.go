@@ -14,12 +14,12 @@ func (a *App) CalibrateManifold(ctx context.Context, segment model.ManifoldID, h
 	if err != nil {
 		return err
 	}
+	defer lease.Release()
 	if CalibrateProbe != nil {
 		if err := CalibrateProbe(ctx); err != nil {
 			return fmt.Errorf("calibrate: %w", err)
 		}
 	}
-	lease.Release()
 	return nil
 }
 
