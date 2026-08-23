@@ -8,7 +8,7 @@ import (
 )
 
 func (a *App) ExecutePlan(ctx context.Context, entries []model.BoostScheduleEntry) error {
-	return a.pumpSched.InstallBoostPlanCtx(context.Background(), entries)
+	return a.pumpSched.InstallBoostPlanCtx(ctx, entries)
 }
 
 func (a *App) SchedulerItemCount() int {
