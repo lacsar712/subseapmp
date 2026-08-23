@@ -1,2 +1,2 @@
-// Package subseapmp is an Subsea pump manifold booster station controller for pump plant coordination.
+// Package subseapmp is a subsea pump manifold booster station controller for multiphase production coordination.
 package subseapmp
