@@ -81,6 +81,7 @@ func (p *BoosterPlant) ValidateFlows(ctx context.Context) error {
 }
 
 func (p *BoosterPlant) ArmPressureHold(w pipeline.Window) { p.hold.Arm(w) }
+func (p *BoosterPlant) HoldController() *pipeline.HoldBarontroller { return p.hold }
 func (p *BoosterPlant) PressureHoldActive() bool                { return p.hold.Active() }
 func (p *BoosterPlant) Coordinator() *BoosterCoordinator { return p.coordinator }
 func (p *BoosterPlant) Manifolds() *manifold.Registry   { return p.manifolds }

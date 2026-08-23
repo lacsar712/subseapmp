@@ -29,6 +29,14 @@ type App struct {
 	lock    *interlock.ValveLock
 	valves  *pump.ValveActuator
 	router  *manifold.Router
+	slotCoord    *manifold.SlotCoordinator
+	headers      *manifold.HeaderTable
+	segments     *pipeline.SegmentRegistry
+	routeResolver *pipeline.RouteResolver
+	pressureBank *pump.BoosterPressureBank
+	staging      *pump.StagingSequence
+	suctionGuard *pump.SuctionDischargeGuard
+	holdMonitor  *pipeline.HoldMonitor
 }
 
 func New(cfg config.Config) (*App, error) {
@@ -59,6 +67,7 @@ func New(cfg config.Config) (*App, error) {
 	a.valves = pump.NewValveActuator(a.lock)
 	a.alarms = alarms.NewEmitter(alarms.NewRegistry(), clk, cfg.AlarmBufferSize)
 	a.StationFSM = fsm.NewStationFSM(StationID, a.onStationTransition)
+	a.initDomainModules(manifoldID)
 	a.persistSnapshot(StationID)
 	return a, nil
 }
@@ -104,10 +113,16 @@ func (a *App) RunOnce(ctx context.Context) error {
 	if err := a.plant.PrimeManifold(ctx, mf); err != nil {
 		return err
 	}
+	if _, err := a.ResolveManifoldRoute(mf, "mf-secondary"); err != nil {
+		return err
+	}
+	if err := a.CoordinateSlots(ctx); err != nil {
+		return err
+	}
 	if err := a.StationFSM.Apply(ctx, "flow_ok"); err != nil {
 		return err
 	}
-	if err := a.plant.Coordinator().Start(ctx, model.BoosterID("boost-1")); err != nil {
+	if err := a.StageBoosters(ctx); err != nil {
 		return err
 	}
 	a.plant.ObserveFlow(mf, a.cfg.DefaultFlowLPM)
@@ -115,6 +130,10 @@ func (a *App) RunOnce(ctx context.Context) error {
 		return err
 	}
 	a.plant.ArmPressureHold(pipeline.NewWindow(a.clk.Now(), time.Duration(a.cfg.PressureHoldMinutes)*time.Minute, 6.5))
+	a.holdMonitor.BeginHold(pipeline.NewWindow(a.clk.Now(), time.Duration(a.cfg.PressureHoldMinutes)*time.Minute, 6.5))
+	if err := a.MonitorPressureHold(ctx); err != nil {
+		return err
+	}
 	if err := a.StationFSM.Apply(ctx, "pressure_hold"); err != nil {
 		return err
 	}
