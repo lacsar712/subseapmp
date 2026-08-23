@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/lacsar712/subseapmp/internal/clock"
+	"github.com/lacsar712/subseapmp/internal/model"
 )
 
 type PumpRamp struct {
@@ -28,6 +29,11 @@ func (r *PumpRamp) Ramp(ctx context.Context, apply func(float64)) error {
 	step := target / float64(r.steps)
 	cur := 0.0
 	for cur < target {
+		select {
+		case <-ctx.Done():
+			return model.Wrap("pump_ramp", "canceled", context.Cause(ctx))
+		default:
+		}
 		cur += step
 		if cur > target {
 			cur = target
@@ -36,7 +42,11 @@ func (r *PumpRamp) Ramp(ctx context.Context, apply func(float64)) error {
 		if pc, ok := r.clk.(*clock.ProcessClock); ok {
 			pc.Step()
 		}
-		time.Sleep(r.delay)
+		select {
+		case <-ctx.Done():
+			return model.Wrap("pump_ramp", "canceled", context.Cause(ctx))
+		case <-time.After(r.delay):
+		}
 	}
 	return nil
 }
