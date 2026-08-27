@@ -1,6 +1,6 @@
-# HookRelay
+# subseapmp
 
-Signed ingress + reliable outbound webhook delivery (retry, circuit breaker, rate limit, DLQ, replay).
+subseapmp 是一套海底泵 manifold 增压站工业过程控制系统，用于多相增压器、产量与过程协调。
 
 ## Requirements
 
